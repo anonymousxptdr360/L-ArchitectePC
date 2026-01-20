@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Architecte PC - Configurateur Strict & Encyclopédie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-2px);
+            border-color: #38bdf8;
+            box-shadow: 0 4px 20px -5px rgba(56, 189, 248, 0.15);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .reddit-badge {
+            background-color: #ff4500; color: white; font-size: 0.7rem; padding: 2px 8px;
+            border-radius: 9999px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .reddit-badge:hover { transform: scale(1.05); background-color: #ff5719; }
+
+        .shop-btn { transition: all 0.2s; }
+        .shop-btn:hover { transform: translateY(-2px); }
+
+        /* Accordion Styles */
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+        details[open] summary ~ * { animation: sweep .3s ease-in-out; }
+        @keyframes sweep { 0% {opacity: 0; transform: translateY(-10px)} 100% {opacity: 1; transform: translateY(0)} }
+        
+        .arrow-icon { transition: transform 0.3s; }
+        details[open] .arrow-icon { transform: rotate(180deg); }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="showSection('home')">
+                    <i class="fa-solid fa-microchip text-blue-400 text-2xl"></i>
+                    <span class="font-bold text-xl tracking-tight">L'Architecte<span class="text-blue-400">PC</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <button onclick="resetWizard()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-right"></i> Nouveau Build
+                        </button>
+                        <button onclick="showSection('advice')" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-book-open"></i> L'Encyclopédie Hardware
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto px-4 py-8 relative">
+
+        <!-- MODAL (Reddit & Details) -->
+        <div id="infoModal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-slate-800 rounded-xl max-w-lg w-full p-6 border border-slate-600 shadow-2xl transform transition-all scale-100">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-brands fa-reddit text-[#ff4500] text-2xl"></i> L'avis de la communauté
+                    </h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-lg mb-4 border-l-4 border-[#ff4500]">
+                    <p class="text-slate-300 italic" id="modalContent">"..."</p>
+                </div>
+                <p class="text-sm text-slate-400 mb-4">Vérifiez toujours les sources. Reddit est excellent pour les retours utilisateurs réels.</p>
+                <a id="modalLink" href="#" target="_blank" class="block w-full text-center bg-[#ff4500] hover:bg-[#ff5719] text-white font-bold py-2 rounded-lg transition">
+                    Voir les discussions sur Reddit <i class="fa-solid fa-external-link-alt ml-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- SECTION: CONFIGURATEUR (Home) -->
+        <div id="section-home" class="fade-in">
+            <!-- Hero Section -->
+            <div id="hero" class="text-center mb-12 py-10">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6">Votre PC sur mesure, <span class="gradient-text">Sans Bullshit.</span></h1>
+                <p class="text-lg text-slate-400 max-w-3xl mx-auto mb-8">
+                    Notre nouvel algorithme respecte votre budget à l'euro près tout en maximisant les performances.
+                </p>
+                <button onclick="startWizard()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-full shadow-lg shadow-blue-900/50 transition transform hover:scale-105">
+                    Lancer le Configurateur <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Wizard Section -->
+            <div id="wizard" class="hidden max-w-4xl mx-auto bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
+                <div class="bg-slate-900 p-6 border-b border-slate-700 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-sliders mr-2 text-blue-400"></i> Paramètres</h2>
+                    <span id="step-indicator" class="text-sm text-slate-400">Étape 1/2</span>
+                </div>
+
+                <!-- Step 1 -->
+                <div id="step-1" class="p-8">
+                    <div class="mb-10">
+                        <label class="block text-xl font-bold mb-2 text-white">Budget Maximum Strict</label>
+                        <p class="text-sm text-slate-400 mb-6">L'algorithme coupera dans les coûts pour ne JAMAIS dépasser ce montant.</p>
+                        
+                        <div class="relative pt-1">
+                            <input type="range" id="budgetRange" min="500" max="4000" step="50" value="800" 
+                                class="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                            <div class="flex justify-between mt-3 font-mono">
+                                <span class="text-slate-500">500 €</span>
+                                <div class="text-center">
+                                    <span class="text-3xl font-bold text-blue-400" id="budgetValue">800</span>
+                                    <span class="text-blue-400 text-xl">€</span>
+                                </div>
+                                <span class="text-slate-500">4000 €+</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="block text-xl font-bold mb-4 text-white">Usage Principal</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button onclick="selectUsage(this, 'gaming')" class="usage-card p-6 rounded-xl border border-slate-600 bg-slate-700 hover:border-blue-500 transition text-left group active-usage ring-2 ring-blue-500">
+                                <i class="fa-solid fa-gamepad text-3xl mb-3 text-purple-400 group-hover:scale-110 transition"></i>
+                                <h3 class="font-bold text-lg">Gaming Pur</h3>
+                                <p class="text-xs text-slate-400 mt-1">Le GPU est Roi. On sacrifie le reste pour les FPS.</p>
+                            </button>
+                            <button onclick="selectUsage(this, 'streaming')" class="usage-card p-6 rounded-xl border border-slate-600 bg-slate-700/50 hover:border-blue-500 transition text-left group">
+                                <i class="fa-solid fa-video text-3xl mb-3 text-pink-400 group-hover:scale-110 transition"></i>
+                                <h3 class="font-bold text-lg">Création / Stream</h3>
+                                <p class="text-xs text-slate-400 mt-1">CPU robuste + RAM élevée requis.</p>
+                            </button>
+                            <button onclick="selectUsage(this, 'office')" class="usage-card p-6 rounded-xl border border-slate-600 bg-slate-700/50 hover:border-blue-500 transition text-left group">
+                                <i class="fa-solid fa-keyboard text-3xl mb-3 text-green-400 group-hover:scale-110 transition"></i>
+                                <h3 class="font-bold text-lg">Bureautique</h3>
+                                <p class="text-xs text-slate-400 mt-1">Réactivité, silence et durabilité.</p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button onclick="nextStep(2)" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg transition">Suivant <i class="fa-solid fa-chevron-right ml-2"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div id="step-2" class="p-8 hidden">
+                    <div class="mb-8">
+                        <label class="block text-xl font-bold mb-4 text-white">Résolution Cible</label>
+                        <div class="grid grid-cols-3 gap-4">
+                            <button onclick="selectResolution('1080p')" class="res-btn p-4 rounded-xl border border-slate-600 bg-slate-700/50 hover:bg-slate-600 transition text-center ring-2 ring-blue-500 bg-slate-600">
+                                <div class="font-bold text-xl">1080p</div>
+                                <div class="text-xs text-slate-400">Full HD</div>
+                            </button>
+                            <button onclick="selectResolution('1440p')" class="res-btn p-4 rounded-xl border border-slate-600 bg-slate-700/50 hover:bg-slate-600 transition text-center">
+                                <div class="font-bold text-xl text-yellow-400">1440p</div>
+                                <div class="text-xs text-slate-400">QHD (2K)</div>
+                            </button>
+                            <button onclick="selectResolution('4k')" class="res-btn p-4 rounded-xl border border-slate-600 bg-slate-700/50 hover:bg-slate-600 transition text-center">
+                                <div class="font-bold text-xl text-purple-400">4K</div>
+                                <div class="text-xs text-slate-400">UHD</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="block text-xl font-bold mb-2 text-white">Jeux de référence</label>
+                        <p class="text-sm text-slate-400 mb-4">Aide l'algorithme à calibrer la charge CPU vs GPU.</p>
+                        <div class="flex flex-wrap gap-3" id="gamesContainer"></div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-4 border-t border-slate-700">
+                        <button onclick="prevStep(1)" class="text-slate-400 hover:text-white px-4 py-2"><i class="fa-solid fa-chevron-left mr-2"></i> Retour</button>
+                        <button onclick="generateBuild()" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg transition shadow-lg shadow-green-900/50 flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Générer la Config
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" class="hidden">
+                <!-- Summary Header -->
+                <div class="bg-slate-800 rounded-2xl p-6 mb-8 border border-slate-700 shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold text-white mb-2">Votre Build <span id="resBadge" class="text-blue-400"></span></h2>
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-400">Prix Total Estimé :</span>
+                            <span class="text-3xl font-bold text-green-400" id="totalPriceDisplay">0 €</span>
+                        </div>
+                    </div>
+                    
+                    <!-- YOUTUBE BUTTON -->
+                    <button onclick="searchYoutubeBenchmark()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-4 rounded-xl font-bold shadow-lg flex items-center gap-3 transition transform hover:scale-105">
+                        <i class="fa-brands fa-youtube text-2xl"></i>
+                        <div class="text-left leading-tight">
+                            <div class="text-xs uppercase opacity-80">Preuve en vidéo</div>
+                            <div>Voir le test : CPU + GPU</div>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Parts List -->
+                    <div class="lg:col-span-2 space-y-4" id="partsList"></div>
+
+                    <!-- Sidebar -->
+                    <div class="space-y-6">
+                        <!-- FPS -->
+                        <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+                            <h3 class="font-bold text-white mb-4">Estimations FPS (Moyenne)</h3>
+                            <div class="text-xs text-slate-400 mb-3 italic">Calculé avec 16/32 Go de RAM. Les résultats réels sur YouTube peuvent être supérieurs selon les drivers.</div>
+                            <div id="fpsList" class="space-y-4"></div>
+                        </div>
+
+                        <!-- Advice -->
+                        <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+                            <h3 class="font-bold text-yellow-400 mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Vérifications Vitales</h3>
+                            <p id="configAdvice" class="text-sm text-slate-300 leading-relaxed mb-4"></p>
+                            
+                            <div class="bg-blue-900/30 border border-blue-800 p-3 rounded text-xs text-blue-200 mb-2">
+                                <i class="fa-solid fa-microchip mr-1"></i> <strong>BIOS :</strong> Si la carte mère est ancienne, une mise à jour du BIOS peut être requise pour ce CPU.
+                            </div>
+
+                            <a href="https://pc-builds.com/bottleneck-calculator/" target="_blank" class="block w-full bg-slate-700 hover:bg-slate-600 text-center py-2 rounded text-xs text-white border border-slate-600 mt-4">
+                                <i class="fa-solid fa-check-double mr-1"></i> Vérifier le Bottleneck sur PC-Builds.com
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: ENCYCLOPÉDIE (Conseils) -->
+        <div id="section-advice" class="hidden fade-in max-w-5xl mx-auto pb-20">
+            
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-white mb-4">L'Encyclopédie Hardware</h1>
+                <p class="text-slate-400 max-w-2xl mx-auto mb-6">La somme de toutes les erreurs commises par les débutants, compilée pour vous éviter de les reproduire. Cherchez un sujet ci-dessous.</p>
+                <div class="relative max-w-lg mx-auto">
+                    <input type="text" id="adviceSearch" onkeyup="filterAdvice()" placeholder="Rechercher (ex: Boîtier, Watercooling, BIOS...)" 
+                           class="w-full bg-slate-800 border border-slate-600 text-white rounded-full py-3 px-6 pl-12 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-500">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400"></i>
+                </div>
+            </div>
+
+            <div class="space-y-4" id="adviceList">
+                
+                <!-- TOPIC: BOITIER & DIMENSIONS -->
+                <details class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden group">
+                    <summary class="p-6 flex justify-between items-center bg-slate-800 hover:bg-slate-750 transition">
+                        <h3 class="text-xl font-bold text-white"><i class="fa-solid fa-ruler-combined text-orange-400 w-8"></i> Boîtier & Dimensions : Ça rentre ? (100% Sûr)</h3>
+                        <i class="fa-solid fa-chevron-down text-slate-400 arrow-icon"></i>
+                    </summary>
+                    <div class="p-6 border-t border-slate-700 bg-slate-900/50 text-slate-300 space-y-4 text-sm leading-relaxed">
+                        <p class="font-bold text-white text-lg mb-2">3 Règles à vérifier pour ne pas pleurer au montage :</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-800 p-4 rounded border border-slate-600">
+                                <h4 class="font-bold text-blue-400 mb-2">1. La Carte Graphique (GPU)</h4>
+                                <p>C'est l'erreur n°1. Les cartes modernes sont immenses.</p>
+                                <ul class="list-disc ml-4 mt-2">
+                                    <li>Cherchez <strong>"Length"</strong> sur la fiche du GPU (ex: 320mm).</li>
+                                    <li>Cherchez <strong>"Max GPU Length"</strong> sur la fiche du Boîtier (ex: 300mm).</li>
+                                    <li><span class="text-red-400">Ça ne rentre pas !</span> Il faut que le boîtier ait au moins 5-10mm de plus que le GPU.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-800 p-4 rounded border border-slate-600">
+                                <h4 class="font-bold text-green-400 mb-2">2. La Carte Mère</h4>
+                                <p>C'est comme des poupées russes.</p>
+                                <ul class="list-disc ml-4 mt-2">
+                                    <li>Boîtier <strong>ATX</strong> accepte : ATX, Micro-ATX, Mini-ITX. (Tout rentre).</li>
+                                    <li>Boîtier <strong>Micro-ATX</strong> accepte : Micro-ATX, Mini-ITX. <span class="text-red-400">PAS ATX.</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 bg-slate-800 p-4 rounded border border-slate-600">
+                            <h4 class="font-bold text-purple-400 mb-2">3. Le Ventirad CPU</h4>
+                            <p>Si vous avez un gros ventirad, la vitre latérale peut ne pas fermer.</p>
+                            <p>Vérifiez <strong>"CPU Cooler Height"</strong> (Hauteur) sur la fiche du ventirad et <strong>"Max CPU Cooler Clearance"</strong> sur celle du boîtier.</p>
+                        </div>
+
+                        <div class="mt-6 bg-blue-600/20 border border-blue-500 p-4 rounded flex items-center justify-between flex-wrap gap-4">
+                            <div>
+                                <h4 class="font-bold text-white">L'outil infaillible pour vérifier</h4>
+                                <p class="text-xs text-blue-200">Ce site simule le montage et vous alerte en rouge si ça ne rentre pas.</p>
+                            </div>
+                            <a href="https://pcpartpicker.com/list/" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition text-center">
+                                Vérifier sur PCPartPicker <i class="fa-solid fa-external-link-alt ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- TOPIC: COMPATIBILITÉ CPU -->
+                <details class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden group">
+                    <summary class="p-6 flex justify-between items-center bg-slate-800 hover:bg-slate-750 transition">
+                        <h3 class="text-xl font-bold text-white"><i class="fa-solid fa-microchip text-blue-400 w-8"></i> Compatibilité CPU & Carte Mère (Socket)</h3>
+                        <i class="fa-solid fa-chevron-down text-slate-400 arrow-icon"></i>
+                    </summary>
+                    <div class="p-6 border-t border-slate-700 bg-slate-900/50 text-slate-300 space-y-4 text-sm leading-relaxed">
+                        <p>C'est la base absolue. Le processeur ne rentre que dans un seul type de trou (Socket).</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-800 p-4 rounded border border-slate-600">
+                                <h4 class="font-bold text-white mb-2">Chez AMD (Les Rouges)</h4>
+                                <ul class="list-disc ml-4 space-y-1">
+                                    <li><strong>AM4 :</strong> Ryzen série 1000 à 5000. DDR4.</li>
+                                    <li><strong>AM5 :</strong> Ryzen série 7000+. DDR5 uniquement.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-800 p-4 rounded border border-slate-600">
+                                <h4 class="font-bold text-white mb-2">Chez Intel (Les Bleus)</h4>
+                                <ul class="list-disc ml-4 space-y-1">
+                                    <li><strong>LGA1700 :</strong> Intel Core 12, 13, 14ème gen.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="bg-red-900/20 border border-red-700 p-4 rounded">
+                            <strong><i class="fa-solid fa-triangle-exclamation"></i> Danger Critique (Pins Tordues) :</strong>
+                            Si vous tordez un PIN, la carte mère est morte. Posez le CPU délicatement sans appuyer.
+                        </div>
+                    </div>
+                </details>
+
+                <!-- TOPIC: REFROIDISSEMENT -->
+                <details class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden group">
+                    <summary class="p-6 flex justify-between items-center bg-slate-800 hover:bg-slate-750 transition">
+                        <h3 class="text-xl font-bold text-white"><i class="fa-solid fa-snowflake text-cyan-400 w-8"></i> Refroidissement : Air vs Watercooling</h3>
+                        <i class="fa-solid fa-chevron-down text-slate-400 arrow-icon"></i>
+                    </summary>
+                    <div class="p-6 border-t border-slate-700 bg-slate-900/50 text-slate-300 space-y-4 text-sm leading-relaxed">
+                         <p><strong>Règle d'or :</strong> Pour un Ryzen 5 ou un i5, un ventirad à 30-40€ (ex: Thermalright Peerless Assassin) est LARGEMENT suffisant et souvent plus fiable qu'un Watercooling bas de gamme.</p>
+                         <p class="text-yellow-400"><i class="fa-solid fa-lightbulb"></i> N'oubliez jamais d'enlever le film plastique sous la base du ventirad avant de l'installer !</p>
+                    </div>
+                </details>
+
+                <!-- TOPIC: ALIMENTATION -->
+                <details class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden group">
+                    <summary class="p-6 flex justify-between items-center bg-slate-800 hover:bg-slate-750 transition">
+                        <h3 class="text-xl font-bold text-white"><i class="fa-solid fa-plug text-yellow-500 w-8"></i> Alimentation (PSU) : Ne faites pas brûler votre maison</h3>
+                        <i class="fa-solid fa-chevron-down text-slate-400 arrow-icon"></i>
+                    </summary>
+                    <div class="p-6 border-t border-slate-700 bg-slate-900/50 text-slate-300 space-y-4 text-sm leading-relaxed">
+                        <p>Ne soyez jamais radin ici. Fiez-vous à la "Cultists Network PSU Tier List". Achetez du Tier A ou B.</p>
+                        <p class="bg-red-900/30 p-2 rounded border border-red-800 text-red-200">
+                            <strong>ATTENTION CÂBLES :</strong> Les câbles modulaires NE SONT PAS standards. Si vous changez d'alimentation, CHANGEZ TOUS LES CÂBLES. Ne gardez pas les anciens, vous allez griller vos disques.
+                        </p>
+                    </div>
+                </details>
+                
+                 <!-- TOPIC: WINDOWS -->
+                <details class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden group">
+                    <summary class="p-6 flex justify-between items-center bg-slate-800 hover:bg-slate-750 transition">
+                        <h3 class="text-xl font-bold text-white"><i class="fa-brands fa-windows text-blue-500 w-8"></i> Installer Windows pour 1€ ?</h3>
+                        <i class="fa-solid fa-chevron-down text-slate-400 arrow-icon"></i>
+                    </summary>
+                    <div class="p-6 border-t border-slate-700 bg-slate-900/50 text-slate-300 space-y-4 text-sm leading-relaxed">
+                        <p>Ne payez pas 150€. Créez une clé USB d'installation via le site Microsoft (gratuit), installez Windows sans clé ("Je n'ai pas de clé"), puis achetez une clé OEM sur un site tiers pour quelques euros.</p>
+                    </div>
+                </details>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- EXPANDED DATA WITH LOW-END & MID-RANGE ---
+        const partsDB = {
+            cpu: [
+                { name: "Intel Core i3-12100F", price: 95, tier: 2, socket: "LGA1700", redditComment: "Imbattable sous les 100€." },
+                { name: "AMD Ryzen 5 5500", price: 100, tier: 2, socket: "AM4", redditComment: "Excellent pour les budgets ultra serrés." },
+                { name: "AMD Ryzen 5 5600", price: 135, tier: 3, socket: "AM4", redditComment: "Le roi du budget 1080p." },
+                { name: "Intel Core i5-12400F", price: 145, tier: 3, socket: "LGA1700", redditComment: "Très solide, chauffe peu." },
+                { name: "AMD Ryzen 5 7600", price: 215, tier: 5, socket: "AM5", redditComment: "Porte d'entrée vers l'AM5." },
+                { name: "Intel Core i5-13600K", price: 310, tier: 7, socket: "LGA1700", redditComment: "Monstre de productivité." },
+                { name: "AMD Ryzen 7 7800X3D", price: 395, tier: 9, socket: "AM5", redditComment: "Meilleur CPU gaming du monde." },
+            ],
+            gpu: [
+                { name: "AMD Radeon RX 6600 8GB", price: 210, tier: 3, res: "1080p", redditComment: "Meilleur rapport perf/prix entrée de gamme." },
+                { name: "Intel Arc A750", price: 220, tier: 3, res: "1080p", redditComment: "Puissante mais drivers capricieux parfois." },
+                { name: "NVIDIA RTX 3060 12GB", price: 285, tier: 3, res: "1080p", redditComment: "12GB de VRAM utile pour la longévité." },
+                { name: "NVIDIA RTX 4060 8GB", price: 315, tier: 4, res: "1080p", redditComment: "DLSS 3 est un gros plus." },
+                { name: "AMD Radeon RX 6750 XT 12GB", price: 360, tier: 5, res: "1440p", redditComment: "Roi du 1440p budget." },
+                { name: "NVIDIA RTX 4070 Super", price: 620, tier: 7, res: "1440p", redditComment: "Efficace et puissante." },
+                { name: "AMD Radeon RX 7900 XT", price: 820, tier: 8, res: "4k", redditComment: "Bête de course pour la 4K." },
+            ],
+            motherboard: [
+                { socket: "AM4", name: "Gigabyte B450M DS3H", price: 70, redditComment: "Basique mais fait le job." },
+                { socket: "LGA1700", name: "MSI PRO H610M", price: 85, redditComment: "Entrée de gamme Intel correcte." },
+                { socket: "AM4", name: "MSI B550-A PRO", price: 115, redditComment: "Standard pour Ryzen 5000." },
+                { socket: "LGA1700", name: "Gigabyte B760 GAMING", price: 145, redditComment: "Bon milieu de gamme." },
+                { socket: "AM5", name: "ASRock B650M-HDV", price: 135, redditComment: "Moche mais VRM solides." },
+            ],
+            ram: [
+                { type: "DDR4", name: "Silicon Power 16GB (2x8) 3200", price: 38, redditComment: "Le moins cher qui marche." },
+                { type: "DDR4", name: "Corsair LPX 16GB (2x8) 3200", price: 45, redditComment: "Fiable et compatible partout." },
+                { type: "DDR4", name: "Corsair LPX 32GB (2x16) 3200", price: 75, redditComment: "Confort total." },
+                { type: "DDR5", name: "Crucial 32GB (2x16) 4800", price: 95, redditComment: "DDR5 basique." },
+                { type: "DDR5", name: "G.Skill Flare X5 32GB 6000 C30", price: 125, redditComment: "Le top pour Ryzen 7000." },
+            ],
+            storage: [
+                { name: "Kingston NV2 500GB", price: 40, redditComment: "Juste pour l'OS et 2 jeux." },
+                { name: "Crucial P3 Plus 1TB", price: 72, redditComment: "Bon rapport qualité prix." },
+                { name: "WD Black SN850X 1TB", price: 95, redditComment: "Haut de gamme très rapide." },
+            ],
+            psu: [
+                { name: "MSI MAG A550BN (550W)", price: 55, redditComment: "Suffisant pour les petits builds." },
+                { name: "MSI MAG A650BN (650W)", price: 65, redditComment: "Tier C, bon pour budget moyen." },
+                { name: "Corsair RM750e (750W Gold)", price: 105, redditComment: "Tier A, silencieuse." },
+            ],
+            case: [
+                { name: "DeepCool Matrexx 30", price: 45, redditComment: "Cheap, mais ça tient les composants." },
+                { name: "Montech Air 903 Base", price: 75, redditComment: "Flux d'air incroyable." },
+                { name: "Corsair 4000D Airflow", price: 105, redditComment: "Le classique indémodable." },
+            ]
+        };
+
+        const games = [
+            { id: "fortnite", name: "Fortnite", icon: "fa-person-rifle", cpuHeavy: true, tierReq: 2 },
+            { id: "cod", name: "Call of Duty", icon: "fa-gun", cpuHeavy: true, tierReq: 5 },
+            { id: "cyberpunk", name: "Cyberpunk 2077", icon: "fa-city", cpuHeavy: false, tierReq: 7 }, 
+            { id: "lol", name: "League of Legends", icon: "fa-dragon", cpuHeavy: true, tierReq: 1 },
+            { id: "gta", name: "GTA V / VI", icon: "fa-car", cpuHeavy: true, tierReq: 4 },
+            { id: "fs2020", name: "Flight Sim", icon: "fa-plane", cpuHeavy: true, tierReq: 7 }
+        ];
+
+        // State
+        let userConfig = { budget: 800, usage: 'gaming', resolution: '1080p', games: [] };
+        let currentBuild = null;
+
+        // --- NAVIGATION & UTILS ---
+        function showSection(sectionId) {
+            document.getElementById('section-home').classList.add('hidden');
+            document.getElementById('section-advice').classList.add('hidden');
+            document.getElementById(`section-${sectionId}`).classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function filterAdvice() {
+            const input = document.getElementById('adviceSearch').value.toLowerCase();
+            const items = document.querySelectorAll('#adviceList details');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(input) ? 'block' : 'none';
+                if(input.length > 2) item.open = true; else item.open = false;
+            });
+        }
+
+        function resetWizard() {
+            showSection('home');
+            document.getElementById('hero').classList.remove('hidden');
+            document.getElementById('wizard').classList.add('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('step-2').classList.add('hidden');
+            userConfig = { budget: 800, usage: 'gaming', resolution: '1080p', games: [] };
+            updateBudgetDisplay(800);
+            document.querySelectorAll('.active-usage').forEach(el => el.classList.remove('active-usage', 'ring-2', 'ring-blue-500'));
+        }
+
+        // --- WIZARD LOGIC ---
+        const budgetRange = document.getElementById('budgetRange');
+        budgetRange.addEventListener('input', (e) => updateBudgetDisplay(e.target.value));
+
+        function updateBudgetDisplay(val) {
+            document.getElementById('budgetValue').textContent = val;
+            userConfig.budget = parseInt(val);
+        }
+
+        function startWizard() {
+            document.getElementById('hero').classList.add('hidden');
+            document.getElementById('wizard').classList.remove('hidden');
+            renderGames();
+        }
+
+        function selectUsage(btn, type) {
+            document.querySelectorAll('.usage-card').forEach(b => b.classList.remove('active-usage', 'ring-2', 'ring-blue-500', 'bg-slate-700'));
+            document.querySelectorAll('.usage-card').forEach(b => b.classList.add('bg-slate-700/50'));
+            btn.classList.remove('bg-slate-700/50');
+            btn.classList.add('active-usage', 'ring-2', 'ring-blue-500', 'bg-slate-700');
+            userConfig.usage = type;
+        }
+
+        function selectResolution(res) {
+            userConfig.resolution = res;
+            document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('ring-2', 'ring-blue-500', 'bg-slate-600'));
+            event.currentTarget.classList.add('ring-2', 'ring-blue-500', 'bg-slate-600');
+        }
+
+        function nextStep(step) {
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+            document.getElementById('step-indicator').textContent = "Étape 2/2";
+        }
+        function prevStep(step) {
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('step-indicator').textContent = "Étape 1/2";
+        }
+
+        function renderGames() {
+            const container = document.getElementById('gamesContainer');
+            if(container.innerHTML !== "") return;
+            container.innerHTML = games.map(g => `
+                <div onclick="toggleGame(this, '${g.id}')" 
+                     class="cursor-pointer bg-slate-700/50 border border-slate-600 px-4 py-2 rounded-full text-sm hover:bg-slate-600 transition flex items-center gap-2 select-none">
+                    <i class="fa-solid ${g.icon}"></i> ${g.name}
+                </div>
+            `).join('');
+        }
+
+        function toggleGame(el, id) {
+            el.classList.toggle('bg-blue-600');
+            el.classList.toggle('border-blue-500');
+            if(userConfig.games.includes(id)) userConfig.games = userConfig.games.filter(x => x !== id);
+            else userConfig.games.push(id);
+        }
+
+        // --- NEW ALGORITHM: GUILLOTINE (STRICT BUDGET) ---
+        function generateBuild() {
+            document.getElementById('wizard').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+
+            let maxBudget = userConfig.budget;
+            
+            // 1. Start with "Ideal" Parts based on Budget Bracket
+            let gpu, cpu, mobo, ram, storage, psu, kase;
+            
+            // Sort all lists by price ascending
+            const sortPrice = (a,b) => a.price - b.price;
+            for(let key in partsDB) partsDB[key].sort(sortPrice);
+
+            // Allocation Strategy (Ideal)
+            let gpuAlloc = maxBudget * 0.40;
+            let cpuAlloc = maxBudget * 0.20;
+
+            // Initial Selection (Optimistic)
+            gpu = partsDB.gpu.filter(p => p.price <= gpuAlloc).pop() || partsDB.gpu[0];
+            cpu = partsDB.cpu.filter(p => p.price <= cpuAlloc).pop() || partsDB.cpu[0];
+            
+            // Logic for socket matching
+            let socket = (cpu.name.includes('Ryzen 5 7') || cpu.name.includes('Ryzen 7 7')) ? "AM5" : (cpu.name.includes('Ryzen') ? "AM4" : "LGA1700");
+            mobo = partsDB.motherboard.find(m => m.socket === socket) || partsDB.motherboard[0];
+            let ramType = socket === "AM5" ? "DDR5" : "DDR4";
+            ram = partsDB.ram.find(r => r.type === ramType) || partsDB.ram[0];
+            
+            storage = partsDB.storage.find(s => s.price <= 50) || partsDB.storage[0];
+            psu = partsDB.psu.find(p => p.price <= 60) || partsDB.psu[0];
+            kase = partsDB.case.find(c => c.price <= 50) || partsDB.case[0];
+
+            // 2. Strict Budget Enforcement Loop
+            let total = calculateTotal(cpu, gpu, mobo, ram, storage, psu, kase);
+            let attempts = 0;
+            
+            // While we are over budget, downgrade most expensive non-essential parts
+            while (total > maxBudget && attempts < 20) {
+                // Determine what to cut
+                // Order of sacrifice: GPU > CPU > RAM > Mobo > Storage > PSU/Case
+                
+                // Try to cut GPU
+                let prevGpuPrice = gpu.price;
+                let cheaperGpu = partsDB.gpu.filter(p => p.price < gpu.price).pop();
+                
+                if (cheaperGpu) {
+                    gpu = cheaperGpu;
+                } else {
+                    // GPU is already lowest, try CPU
+                    let cheaperCpu = partsDB.cpu.filter(p => p.price < cpu.price).pop();
+                    if (cheaperCpu) {
+                        cpu = cheaperCpu;
+                        // Re-evaluate Mobo/RAM if socket changes
+                        socket = (cpu.name.includes('Ryzen 5 7') || cpu.name.includes('Ryzen 7 7')) ? "AM5" : (cpu.name.includes('Ryzen') ? "AM4" : "LGA1700");
+                        let newMobo = partsDB.motherboard.find(m => m.socket === socket && m.price <= mobo.price);
+                        if(newMobo) mobo = newMobo;
+                        
+                        ramType = socket === "AM5" ? "DDR5" : "DDR4";
+                        let newRam = partsDB.ram.find(r => r.type === ramType && r.price <= ram.price);
+                        if(newRam) ram = newRam;
+                    } else {
+                        // CPU lowest, cut others
+                        let cheaperRam = partsDB.ram.filter(r => r.type === ramType && r.price < ram.price).pop();
+                        if(cheaperRam) ram = cheaperRam;
+                        else {
+                            let cheaperStorage = partsDB.storage.filter(s => s.price < storage.price).pop();
+                            if(cheaperStorage) storage = cheaperStorage;
+                        }
+                    }
+                }
+                
+                total = calculateTotal(cpu, gpu, mobo, ram, storage, psu, kase);
+                attempts++;
+            }
+
+            // 3. Upgrade Loop (If we have money left)
+            // If strictly under budget, try to bump GPU then CPU
+            while (total < maxBudget - 40 && attempts < 40) {
+                 let nextGpu = partsDB.gpu.find(p => p.price > gpu.price && (total - gpu.price + p.price) <= maxBudget);
+                 if(nextGpu) {
+                     gpu = nextGpu;
+                 } else {
+                     break; // Can't upgrade GPU, stop to save money
+                 }
+                 total = calculateTotal(cpu, gpu, mobo, ram, storage, psu, kase);
+                 attempts++;
+            }
+
+            currentBuild = [
+                { type: "Processeur", item: cpu, icon: "fa-microchip" },
+                { type: "Carte Graphique", item: gpu, icon: "fa-display" },
+                { type: "Carte Mère", item: mobo, icon: "fa-chess-board" },
+                { type: "RAM", item: ram, icon: "fa-memory" },
+                { type: "Stockage", item: storage, icon: "fa-hard-drive" },
+                { type: "Alimentation", item: psu, icon: "fa-plug" },
+                { type: "Boîtier", item: kase, icon: "fa-box" },
+            ];
+
+            renderResults();
+            calculateFPS(gpu, ram);
+        }
+
+        function calculateTotal(c, g, m, r, s, p, k) {
+            return c.price + g.price + m.price + r.price + s.price + p.price + k.price;
+        }
+
+        function renderResults() {
+            let total = 0;
+            const container = document.getElementById('partsList');
+            container.innerHTML = currentBuild.map((p, index) => {
+                total += p.item.price;
+                return `
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row gap-4 card-hover relative group">
+                    <div class="bg-slate-700/50 p-4 rounded-lg flex items-center justify-center min-w-[60px]">
+                        <i class="fa-solid ${p.icon} text-2xl text-slate-400"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase">${p.type}</h4>
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg font-bold text-green-400" id="price-${index}">${p.item.price} €</span>
+                                <button onclick="editPrice(${index})" class="text-slate-600 hover:text-white" title="Modifier le prix"><i class="fa-solid fa-pencil text-xs"></i></button>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-white leading-tight mb-2">${p.item.name}</h3>
+                        
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            ${p.item.redditComment ? `<span onclick="openRedditModal('${p.item.name.replace(/'/g, "")}', '${p.item.redditComment.replace(/'/g, "")}')" class="reddit-badge"><i class="fa-brands fa-reddit-alien"></i> Avis Reddit</span>` : ''}
+                        </div>
+
+                        <!-- Shop Buttons -->
+                        <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-700/50 opacity-60 group-hover:opacity-100 transition">
+                            <button onclick="shopSearch('amazon', '${p.item.name}')" class="shop-btn text-xs bg-slate-900 hover:bg-[#FF9900] hover:text-black border border-slate-600 px-3 py-1 rounded text-slate-300">
+                                <i class="fa-brands fa-amazon"></i>
+                            </button>
+                            <button onclick="shopSearch('cdiscount', '${p.item.name}')" class="shop-btn text-xs bg-slate-900 hover:bg-[#003884] border border-slate-600 px-3 py-1 rounded text-slate-300">
+                                Cdiscount
+                            </button>
+                            <button onclick="shopSearch('leboncoin', '${p.item.name}')" class="shop-btn text-xs bg-slate-900 hover:bg-[#ff6e14] hover:text-white border border-slate-600 px-3 py-1 rounded text-slate-300" title="Occasion FR">
+                                <i class="fa-solid fa-box-open"></i> LeBonCoin
+                            </button>
+                            <button onclick="shopSearch('ebay', '${p.item.name}')" class="shop-btn text-xs bg-slate-900 hover:bg-green-600 border border-slate-600 px-3 py-1 rounded text-slate-300" title="International">
+                                eBay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+
+            const budgetEl = document.getElementById('totalPriceDisplay');
+            budgetEl.textContent = total + " €";
+            
+            // Color feedback for budget
+            if(total > userConfig.budget) budgetEl.classList.replace('text-green-400', 'text-red-400');
+            else budgetEl.classList.replace('text-red-400', 'text-green-400');
+            
+            document.getElementById('resBadge').textContent = userConfig.resolution;
+        }
+
+        function searchYoutubeBenchmark() {
+            const cpu = currentBuild[0].item.name.split('(')[0].trim();
+            const gpu = currentBuild[1].item.name.split('(')[0].trim().replace("AMD Radeon ", "").replace("NVIDIA ", "");
+            const query = `${cpu} + ${gpu} gaming benchmark 20 games`;
+            window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`, '_blank');
+        }
+
+        function editPrice(index) {
+            const newPrice = prompt("Nouveau prix trouvé pour " + currentBuild[index].item.name + " :");
+            if (newPrice && !isNaN(newPrice)) {
+                currentBuild[index].item.price = parseInt(newPrice);
+                renderResults(); 
+            }
+        }
+
+        function shopSearch(site, query) {
+            let url = "";
+            const q = encodeURIComponent(query);
+            if(site === 'amazon') url = `https://www.amazon.fr/s?k=${q}`;
+            if(site === 'cdiscount') url = `https://www.cdiscount.com/search/10/${q}.html`;
+            if(site === 'ebay') url = `https://www.ebay.fr/sch/i.html?_nkw=${q}&LH_ItemCondition=3000`;
+            if(site === 'leboncoin') url = `https://www.leboncoin.fr/recherche?text=${q}`;
+            window.open(url, '_blank');
+        }
+
+        function openRedditModal(name, comment) {
+            document.getElementById('modalContent').textContent = `"${comment}"`;
+            document.getElementById('modalLink').href = `https://www.reddit.com/r/buildapc/search/?q=${encodeURIComponent(name)} review&restrict_sr=1`;
+            document.getElementById('infoModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').classList.add('hidden');
+        }
+
+        function calculateFPS(gpu, ram) {
+            const baseScore = gpu.tier * 32; 
+            const resMod = userConfig.resolution === '1080p' ? 1.2 : (userConfig.resolution === '1440p' ? 0.8 : 0.5);
+            const is32GB = ram.name.includes("32GB");
+            const ramMultiplier = is32GB ? 1.1 : 1.0; 
+            const gamesToShow = userConfig.games.length ? userConfig.games : ['fortnite', 'cyberpunk', 'cod'];
+
+            document.getElementById('fpsList').innerHTML = gamesToShow.map(gid => {
+                const game = games.find(g => g.id === gid) || {name: gid, tierReq: 5};
+                let fps = Math.round( (baseScore / (game.tierReq * 0.4)) * resMod * ramMultiplier );
+                if(fps > 300) fps = 300;
+                
+                let color = fps > 100 ? 'text-green-400' : (fps > 60 ? 'text-blue-400' : 'text-yellow-500');
+                if(fps < 40) color = 'text-red-500';
+
+                return `
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                    <span class="text-slate-300 text-sm"><i class="fa-solid ${game.icon || 'fa-gamepad'} w-6"></i> ${game.name}</span>
+                    <span class="font-bold font-mono ${color}">${fps} FPS</span>
+                </div>`;
+            }).join('');
+
+            const adviceEl = document.getElementById('configAdvice');
+             if(currentBuild[0].item.price + currentBuild[1].item.price < 400) {
+                 adviceEl.textContent = "Budget serré : Cette configuration est un excellent point de départ. Pour jouer à des jeux très lourds, il faudra peut-être baisser la qualité graphique.";
+             } else if (userConfig.usage === 'gaming' && gpu.tier >= 5) {
+                adviceEl.textContent = "Configuration équilibrée pour le jeu. Vous avez investi l'argent là où ça compte (GPU).";
+            } else {
+                adviceEl.textContent = "Configuration polyvalente. Vérifiez que le XMP est activé dans le BIOS pour la RAM.";
+            }
+        }
+    </script>
+</body>
+</html>
